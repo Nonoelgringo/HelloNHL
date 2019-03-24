@@ -21,7 +21,11 @@ def get_team(teamid):
 
 def get_standings(season=None):
     if season:
-        standings_requests = requests.get('https://statsapi.web.nhl.com/api/v1/standings/?season=' + season)
+        if len(season) != 8:
+            print("Please enter a season like this : 20162017")
+            sys.exit()
+        else:
+            standings_requests = requests.get('https://statsapi.web.nhl.com/api/v1/standings/?season=' + season)
     else:
         standings_requests = requests.get('https://statsapi.web.nhl.com/api/v1/standings/')
     try:
@@ -50,7 +54,11 @@ def get_draft_year(year='2018',round=1,picks=25):
         print('There was an problem: %s' % (exc))
     draft = draft_request.text
     draft_json = json.loads(draft)
-    draft_round = draft_json['drafts'][0]['rounds'][round]
+    try:
+        draft_round = draft_json['drafts'][0]['rounds'][round]
+    except KeyError:
+        print('Please pick a valid draft year ;)')
+        sys.exit()
     print('#'* 46)
     for player in draft_round["picks"][:picks]:
         draft_info = '{}-{} {}'.format(player["round"],player["pickInRound"],player['prospect']['fullName'])
@@ -78,7 +86,7 @@ def get_today():
         print(team1.rjust(22,' ') + scoreboard + team2.ljust(22,' ') + status)
     print('#'*60)
 
-def choice_to_function(argument):
+def choice_to_function(input_list):
     switcher = {
         "standings": get_standings,
         "draft": get_draft_year,
@@ -86,9 +94,9 @@ def choice_to_function(argument):
         "quit": sys.exit
     }
     # Get the function from switcher dictionary
-    func = switcher.get(argument, lambda: "nothing")
+    func = switcher.get(input_list[0], lambda: "nothing")
     # Execute the function
-    return func()
+    return func(input_list[1])
 
 #getTeam(3)
 choices = {"standing"}
@@ -99,7 +107,7 @@ description = " Welcome. Supported calls \n" \
                   " - quit : to quit lul"
 print(description)
 while True:
-    input_user = input()
+    input_user = input().split()
     choice_to_function(input_user)
     print("next choice.")
 
