@@ -120,6 +120,10 @@ def print_teams():
         print(team_id.ljust(3) + team_name.ljust(22) + team_other_infos)
     print('*' * 55)
 
+#TODO : def get_roster(team_id)
+
+#TODO : def get_awards()
+
 def choice_to_function(choice, *args):
     if args:
         switcher = {
