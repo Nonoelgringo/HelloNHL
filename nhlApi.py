@@ -4,7 +4,10 @@ import requests
 import json
 import sys
 from functools import partial
+import pprint
 
+#not need for galbal declaration to read values from
+team_dict = {}
 
 def get_team(teamid):
     team_request = requests.get('https://statsapi.web.nhl.com/api/v1/teams/' + str(teamid))
@@ -88,6 +91,35 @@ def get_today():
     print('#'*60)
 
 
+def get_teams():
+    global team_dict
+    teams_request = requests.get('https://statsapi.web.nhl.com/api/v1/teams')
+    try:
+        teams_request.raise_for_status()
+    except Exception as exc:
+        print('There was an problem: %s' % exc)
+    teams = teams_request.text
+    teams_json = json.loads(teams)
+    print(len(teams_json["teams"]))
+    for team in range(len(teams_json["teams"])):
+        team_id = teams_json["teams"][team]["id"]
+        team_dict[team_id] = {}
+        team_dict[team_id]["name"] = teams_json["teams"][team]["name"]
+        team_dict[team_id]["abbrev"] = teams_json["teams"][team]["abbreviation"]
+        team_dict[team_id]["firstyear"] = teams_json["teams"][team]["firstYearOfPlay"]
+        team_dict[team_id]["conf"] = teams_json["teams"][team]["conference"]["name"]
+        team_dict[team_id]["div"] = teams_json["teams"][team]["division"]["name"]
+
+def print_teams():
+    print("ID Name" + ' ' * 18 + "Abbr 1stY Conf    Div")
+    print('*'*55)
+    for k,v in team_dict.items():
+        team_id = str(k)
+        team_name = v["name"]
+        team_other_infos = "{}  {} {} {}".format(v["abbrev"], v["firstyear"], v["conf"], v["div"])
+        print(team_id.ljust(3) + team_name.ljust(22) + team_other_infos)
+    print('*' * 55)
+
 def choice_to_function(choice, *args):
     if args:
         switcher = {
@@ -99,6 +131,7 @@ def choice_to_function(choice, *args):
             "standings": get_standings,
             "draft": get_draft_year,
             "today": get_today,
+            "teams": print_teams,
             "quit": sys.exit
         }
     # switcher
@@ -107,12 +140,17 @@ def choice_to_function(choice, *args):
     return func()
 
 
+get_teams()
+
+
 choices = {"standing"}
 description = " Welcome. Supported calls \n" \
                   " - standings : print the standings \n" \
                   " - draft : print the draft result (you can choose the year, round and picks) \n" \
                   " - today : get today's schedule \n" \
+                  " - teams : print teams with some infos (including ids, useful for other functions \n" \
                   " - quit : to quit lul"
+
 print(description)
 while True:
     input_user = input().split()
