@@ -6,10 +6,10 @@ import sys
 from functools import partial
 import pprint
 
-#not need for galbal declaration to read values from
+#not need for global declaration to read values from
 team_dict = {}
 
-def get_team(teamid):
+def get_team_name(teamid):
     team_request = requests.get('https://statsapi.web.nhl.com/api/v1/teams/' + str(teamid))
     try:
         team_request.raise_for_status()
@@ -17,8 +17,7 @@ def get_team(teamid):
         print('There was an problem: %s' % exc)
     team = team_request.text
     team_json = json.loads(team)
-    print('Team name : ' + team_json['teams'][0]['name']
-          + '\n Division : ' + team_json['teams'][0]['division']['name'])
+    return team_json['teams'][0]['name']
 
 
 def get_standings(season=None):
@@ -120,15 +119,31 @@ def print_teams():
         print(team_id.ljust(3) + team_name.ljust(22) + team_other_infos)
     print('*' * 55)
 
-#TODO : def get_roster(team_id)
-
-#TODO : def get_awards()
+#TODO : Choose roster season, sort by position
+def get_roster(teamid):
+    team_request = requests.get('https://statsapi.web.nhl.com/api/v1/teams/' + str(teamid) + '/roster')
+    try:
+        team_request.raise_for_status()
+    except Exception as exc:
+        print('There was an problem: %s' % exc)
+    team_name = get_team_name(teamid)
+    team = team_request.text
+    team_roster_json = json.loads(team)
+    roster = team_roster_json["roster"]
+    print(team_name.center(47,'#'))
+    for player in roster:
+        player_fullname = player["person"]["fullName"]
+        position = player["position"]["name"]
+        player_id = player["person"]["id"]
+        print(player_fullname.ljust(25) + position.ljust(15) + str(player_id))
+    print('#'*47)
 
 def choice_to_function(choice, *args):
     if args:
         switcher = {
             "standings": partial(get_standings, *args),
-            "draft": partial(get_draft_year, *args)
+            "draft": partial(get_draft_year, *args),
+            "roster": partial(get_roster, *args)
         }
     else:
         switcher = {
@@ -153,6 +168,7 @@ description = " Welcome. Supported calls \n" \
                   " - draft : print the draft result (you can choose the year, round and picks) \n" \
                   " - today : get today's schedule \n" \
                   " - teams : print teams with some infos (including ids, useful for other functions \n" \
+                  " - roster teamid : print active roster of team \n" \
                   " - quit : to quit lul"
 
 print(description)
