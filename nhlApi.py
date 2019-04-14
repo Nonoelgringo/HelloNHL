@@ -19,6 +19,22 @@ def get_team_name(teamid):
     team_json = json.loads(team)
     return team_json['teams'][0]['name']
 
+def get_player(playerid):
+    player_request = requests.get('https://statsapi.web.nhl.com/api/v1/people/' + str(playerid))
+    player_dict = {}
+    try:
+        player_request.raise_for_status()
+    except Exception as exc:
+        print('There was an problem: %s' % exc)
+    player = player_request.text
+    player_json = json.loads(player)
+    player_info = player_json["people"][0]
+    player_fullname = player_info["fullName"]
+    player_position = player_info["primaryPosition"]["abbreviation"]
+    player_dict["name"] = player_fullname
+    player_dict["position"] = player_position
+    return player_dict
+
 
 def get_standings(season=None):
     if season:
@@ -138,12 +154,47 @@ def get_roster(teamid):
         print(player_fullname.ljust(25) + position.ljust(15) + str(player_id))
     print('#'*47)
 
+def get_stats(playerid):
+    player_request = requests.get('https://statsapi.web.nhl.com/api/v1/people/' + str(playerid) + '/stats?stats=statsSingleSeason')
+    try:
+        player_request.raise_for_status()
+    except Exception as exc:
+        print('There was an problem: %s' % exc)
+    player = player_request.text
+    player_roster_json = json.loads(player)
+    player_stats = player_roster_json["stats"][0]["splits"][0]
+    # getting player infos
+    player_dict = get_player(playerid)
+    player_name = player_dict.get("name")
+    player_position = player_dict.get("position")
+    season = player_stats["season"]
+    print('###### {} - {} ({} stats)'.format(player_name, player_position, season))
+    if 'G' not in player_position:
+        print('goals-assists-points : {}-{}-({})'.format(player_stats["stat"]["goals"], player_stats["stat"]["assists"],
+                                                         player_stats["stat"]["points"]))
+        print('+/- : {}'.format(player_stats["stat"]["plusMinus"]))
+        print('GWG : {}'.format(player_stats["stat"]["gameWinningGoals"]))
+        print('SHG : {}'.format(player_stats["stat"]["shortHandedGoals"]))
+        print('PPGoals - PPPoints : {}-{}'.format(player_stats["stat"]["powerPlayGoals"],
+                                                  player_stats["stat"]["powerPlayPoints"]))
+        print('Pims : {}'.format(player_stats["stat"]["pim"]))
+        print('TOI : {}'.format(player_stats["stat"]["timeOnIcePerGame"]))
+    else:
+        print('Games : {}'.format(player_stats["stat"]["games"]))
+        print('W-L-OT : {} - {} - {}'.format(player_stats["stat"]["wins"], player_stats["stat"]["losses"],
+                                             player_stats["stat"]["ot"]))
+        print('SO : {}'.format(player_stats["stat"]["shutouts"]))
+        print('Save %: {}'.format(player_stats["stat"]["savePercentage"]))
+        print('GAA : {}'.format(player_stats["stat"]["goalAgainstAverage"]))
+
+
 def choice_to_function(choice, *args):
     if args:
         switcher = {
             "standings": partial(get_standings, *args),
             "draft": partial(get_draft_year, *args),
-            "roster": partial(get_roster, *args)
+            "roster": partial(get_roster, *args),
+            "stats": partial(get_stats, *args)
         }
     else:
         switcher = {
@@ -169,6 +220,7 @@ description = " Welcome. Supported calls \n" \
                   " - today : get today's schedule \n" \
                   " - teams : print teams with some infos (including ids, useful for other functions \n" \
                   " - roster teamid : print active roster of team \n" \
+                  " - stats playerid : print player stats for current season \n" \
                   " - quit : to quit lul"
 
 print(description)
