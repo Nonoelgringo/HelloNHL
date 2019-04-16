@@ -1,15 +1,15 @@
-#! python3
+#! /usr/bin/python3
 
 import requests
 import json
 import sys
 from functools import partial
-import pprint
 
 #not need for global declaration to read values from
 team_dict = {}
 
 def get_team_name(teamid):
+    ''' return team name from teamid '''
     team_request = requests.get('https://statsapi.web.nhl.com/api/v1/teams/' + str(teamid))
     try:
         team_request.raise_for_status()
@@ -21,6 +21,7 @@ def get_team_name(teamid):
 
 
 def get_standings(season=None):
+    ''' get and print standings for a season '''
     if season:
         if len(season) != 8:
             print("Please enter a season like this : 20162017")
@@ -48,6 +49,7 @@ def get_standings(season=None):
 
 
 def get_draft_year(year='2018', round=0, picks=25):
+    ''' print drafted rookies '''
     draft_request = requests.get('https://statsapi.web.nhl.com/api/v1/draft/' + year)
     print(year + ' Draft ! Round n°' + str(round + 1) + ' Picks:' + str(picks))
     try:
@@ -70,6 +72,7 @@ def get_draft_year(year='2018', round=0, picks=25):
 
 
 def get_today():
+    ''' print today's games w/ status '''
     live_request = requests.get('https://statsapi.web.nhl.com/api/v1/schedule')
     try:
         live_request.raise_for_status()
@@ -91,6 +94,7 @@ def get_today():
 
 
 def get_teams():
+    ''' retrieves teams info into a global variable'''
     global team_dict
     teams_request = requests.get('https://statsapi.web.nhl.com/api/v1/teams')
     try:
@@ -110,6 +114,7 @@ def get_teams():
         team_dict[team_id]["div"] = teams_json["teams"][team]["division"]["name"]
 
 def print_teams():
+    ''' print teams from team_dict '''
     print("ID Name" + ' ' * 18 + "Abbr 1stY Conf    Div")
     print('*'*55)
     for k,v in team_dict.items():
@@ -121,6 +126,7 @@ def print_teams():
 
 #TODO : Choose roster season, sort by position
 def get_roster(teamid):
+    ''' print team roster from teamid '''
     team_request = requests.get('https://statsapi.web.nhl.com/api/v1/teams/' + str(teamid) + '/roster')
     try:
         team_request.raise_for_status()
@@ -139,6 +145,7 @@ def get_roster(teamid):
     print('#'*47)
 
 def choice_to_function(choice, *args):
+    ''' switcher function '''
     if args:
         switcher = {
             "standings": partial(get_standings, *args),
@@ -166,6 +173,7 @@ choices = {"standing"}
 description = " Welcome. Supported calls \n" \
                   " - standings : print the standings \n" \
                   " - draft : print the draft result (you can choose the year, round and picks) \n" \
+                  " - description : print description \n" \
                   " - today : get today's schedule \n" \
                   " - teams : print teams with some infos (including ids, useful for other functions \n" \
                   " - roster teamid : print active roster of team \n" \
@@ -174,7 +182,9 @@ description = " Welcome. Supported calls \n" \
 print(description)
 while True:
     input_user = input().split()
-    if len(input_user) == 2:
+    if input_user[0] == 'description':
+        print(description)
+    elif len(input_user) == 2:
         choice_to_function(input_user[0], input_user[1])
     else:
         choice_to_function(input_user[0])
