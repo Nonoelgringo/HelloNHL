@@ -40,7 +40,7 @@ def get_standings(season=None):
     ''' get and print standings for a season '''
     if season:
         if len(season) != 8:
-            print("Please enter a season like this : 20162017")
+            print("Please enter a season with following format : 20162017")
             sys.exit()
         else:
             standings_requests = requests.get('https://statsapi.web.nhl.com/api/v1/standings/?season=' + season)
@@ -64,8 +64,21 @@ def get_standings(season=None):
             print('   ' + team_name.ljust(25, ' ') + team_stats)
 
 
-def get_draft_year(year='2018', round=0, picks=25):
+def get_draft_year(arg_list=[]):
     ''' print drafted rookies '''
+    print(arg_list)
+    year = '2018'
+    round = 0
+    picks = 25
+    if len(arg_list) == 1:
+        year = arg_list[0]
+    elif len(arg_list) == 2:
+        year = arg_list[0]
+        round = int(arg_list[1])
+    elif len(arg_list) == 3:
+        year = arg_list[0]
+        round = int(arg_list[1])
+        picks = int(arg_list[2])
     draft_request = requests.get('https://statsapi.web.nhl.com/api/v1/draft/' + year)
     print(year + ' Draft ! Round n°' + str(round + 1) + ' Picks:' + str(picks))
     try:
@@ -140,18 +153,27 @@ def print_teams():
         print(team_id.ljust(3) + team_name.ljust(22) + team_other_infos)
     print('*' * 55)
 
-#TODO : Choose roster season, sort by position
-def get_roster(teamid):
+#TODO : sort by position
+def get_roster(arg_list):
     ''' print team roster from teamid '''
-    team_request = requests.get('https://statsapi.web.nhl.com/api/v1/teams/' + str(teamid) + '/roster')
+    print(arg_list)
+    if len(arg_list) == 1:
+        teamid = str(arg_list[0])
+        team_request = requests.get('https://statsapi.web.nhl.com/api/v1/teams/' + str(teamid) + '?expand=team.roster')
+    elif len(arg_list) == 2:
+        teamid = str(arg_list[0])
+        season = str(arg_list[1])
+        team_request = requests.get('https://statsapi.web.nhl.com/api/v1/teams/' + str(teamid) + '?expand=team.roster&season=' + season )
+
     try:
         team_request.raise_for_status()
     except Exception as exc:
         print('There was an problem: %s' % exc)
+
     team_name = get_team_name(teamid)
     team = team_request.text
     team_roster_json = json.loads(team)
-    roster = team_roster_json["roster"]
+    roster = team_roster_json["teams"][0]["roster"]["roster"]
     print(team_name.center(47,'#'))
     for player in roster:
         player_fullname = player["person"]["fullName"]
@@ -160,8 +182,16 @@ def get_roster(teamid):
         print(player_fullname.ljust(25) + position.ljust(15) + str(player_id))
     print('#'*47)
 
-def get_stats(playerid):
-    player_request = requests.get('https://statsapi.web.nhl.com/api/v1/people/' + str(playerid) + '/stats?stats=statsSingleSeason')
+def get_stats(arg_list):
+    print(arg_list)
+    if len(arg_list) == 1:
+        playerid = str(arg_list[0])
+        player_request = requests.get('https://statsapi.web.nhl.com/api/v1/people/' + str(playerid) + '/stats?stats=statsSingleSeason')
+    elif len(arg_list) == 2:
+        playerid = str(arg_list[0])
+        season = str(arg_list[1])
+        player_request = requests.get('https://statsapi.web.nhl.com/api/v1/people/' + str(playerid)
+                                      + '/stats?stats=statsSingleSeason&season=' + season)
     try:
         player_request.raise_for_status()
     except Exception as exc:
@@ -194,14 +224,14 @@ def get_stats(playerid):
         print('GAA : {}'.format(player_stats["stat"]["goalAgainstAverage"]))
 
 
-def choice_to_function(choice, *args):
+def choice_to_function(choice, args=None):
     ''' switcher function '''
     if args:
         switcher = {
             "standings": partial(get_standings, *args),
-            "draft": partial(get_draft_year, *args),
-            "roster": partial(get_roster, *args),
-            "stats": partial(get_stats, *args)
+            "draft": partial(get_draft_year, args),
+            "roster": partial(get_roster, args),
+            "stats": partial(get_stats, args)
         }
     else:
         switcher = {
@@ -220,24 +250,24 @@ def choice_to_function(choice, *args):
 get_teams()
 
 
-choices = {"standing"}
 description = " Welcome. Supported calls \n" \
-                  " - standings : print the standings \n" \
-                  " - draft : print the draft result (you can choose the year, round and picks) \n" \
+                  " - standings [season] : print the standings \n" \
+                  " - draft [year] [round] [picks] : print the draft result \n" \
                   " - description : print description \n" \
-                  " - today : get today's schedule \n" \
+                  " - today : get today's games \n" \
                   " - teams : print teams with some infos (including ids, useful for other functions \n" \
-                  " - roster teamid : print active roster of team \n" \
+                  " - roster teamid [season] : print active roster of team \n" \
                   " - stats playerid : print player stats for current season \n" \
-                  " - quit : to quit lul"
+                  " - quit : to quit lul \n" \
+                  "i. [] = optionnal argument"
 
 print(description)
 while True:
     input_user = input().split()
     if input_user[0] == 'description':
         print(description)
-    elif len(input_user) == 2:
-        choice_to_function(input_user[0], input_user[1])
+    elif len(input_user) >= 2:
+        choice_to_function(input_user[0], input_user[1:])
     else:
         choice_to_function(input_user[0])
-    print("next choice.")
+    print("\n next choice:")
