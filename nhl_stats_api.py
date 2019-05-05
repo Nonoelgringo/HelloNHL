@@ -125,7 +125,7 @@ def get_today():
         print('There was an problem: %s' % exc)
     live_text = live_request.text
     live_json = json.loads(live_text)
-    print('{} games today ({})'.format(live_json["totalGames"], live_json["dates"][0]["date"]))
+    print('{} game(s) today ({})'.format(live_json["totalGames"], live_json["dates"][0]["date"]))
     print('#'*60)
     for game in live_json["dates"][0]["games"]:
         team1 = game["teams"]["away"]["team"]["name"]
@@ -280,7 +280,7 @@ if __name__ == '__main__':
     # Fills team_dict
     get_teams()
 
-    description = " Welcome. Supported calls: \n" \
+    help = " Welcome. Supported calls: \n" \
                   " - today : get today's games \n" \
                   " - standings [season] : print the standings \n" \
                   " - teams : print teams with some infos (including ids, useful for roster) \n" \
@@ -291,12 +291,12 @@ if __name__ == '__main__':
                   " - quit : to quit lul \n" \
                   "[] = optionnal argument"
 
-    print(description)
+    print(help)
     print("\n Choice?")
     while True:
         input_user = input().split()
         if input_user[0] == 'help':
-            print(description)
+            print(help)
         elif len(input_user) >= 2:
             choice_to_function(input_user[0], input_user[1:])
         else:
