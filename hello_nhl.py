@@ -286,7 +286,7 @@ if __name__ == '__main__':
                   " - teams : print teams with some infos (including ids, useful for roster) \n" \
                   " - roster teamid [season] : print roster of specified team (useful for stats) \n" \
                   " - stats playerid [season] : print player stats \n" \
-                  " - draft [year] [round] [picks] : print the draft results \n" \
+                  " - draft [year] [round] [picks] : print draft results \n" \
                   " - help : print this description \n" \
                   " - quit : to quit lul \n" \
                   "[] = optionnal argument"
