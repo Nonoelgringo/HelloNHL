@@ -46,7 +46,7 @@ def get_player(playerid):
 def get_standings(season=None):
     """
     Gets and prints standings for wanted season
-    :param season: Wanted season (YYYYYY format)
+    :param season: Wanted season (YYYYYYYY format)
     """
     if season:
         if len(season) != 8 or not season.isdigit():
@@ -83,7 +83,7 @@ def get_draft_year(arg_list=[]):
     Gets and prints drafted rookies for a Draft year.
     :param arg_list: Optionnal. List is composed of year, round and picks. Values by default are 2018, 0 (round 1), 25.
     """
-    year = 2018
+    year = 2019
     round_nb = 0
     picks = 25
     if len(arg_list) == 1:
@@ -95,11 +95,11 @@ def get_draft_year(arg_list=[]):
         year = int(arg_list[0])
         round_nb = int(arg_list[1])-1
         picks = int(arg_list[2])
-    if 1980 < year < 2019:
+    if 1980 < year < 2020:
         draft_request = requests.get('https://statsapi.web.nhl.com/api/v1/draft/' + str(year))
     else:
-        print("Please pick a draft year between 1980 and 2018. Continuing with 2018 Draft.")
-        draft_request = requests.get('https://statsapi.web.nhl.com/api/v1/draft/2018')
+        print("Please pick a draft year between 1980 and 2019. Continuing with 2019 Draft.")
+        draft_request = requests.get('https://statsapi.web.nhl.com/api/v1/draft/2019')
     print(str(year) + ' Draft ! Round n°' + str(round_nb + 1) + ' Picks:' + str(picks))
     try:
         draft_request.raise_for_status()
